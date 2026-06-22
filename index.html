@@ -4,14 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>StudyHive 🐝</title>
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <style>* { box-sizing: border-box; } body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }</style>
+  <style>* { box-sizing: border-box; } body { margin:0; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }</style>
 </head>
 <body>
   <div id="root"></div>
-  <script type="text/babel" data-presets="react">
+  <script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const colors = {
@@ -62,8 +63,22 @@ const SEED_MESSAGES = [
 ];
 
 const SEED_NOTES = [
-  { id: "n1", title: "Chapter 5 – Photosynthesis", content: "Photosynthesis is the process by which green plants use sunlight to synthesize nutrients from carbon dioxide and water. The overall equation: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂\n\nKey points:\n- Chlorophyll absorbs light (mainly red and blue)\n- Light-dependent reactions occur in thylakoid membranes\n- Calvin cycle occurs in the stroma\n- Products: glucose (stored energy) and oxygen (released)", userId: "t1", userName: "Mr. Arjun Menon", batch: "Grade 8-A", subject: "Biology", date: "2026-06-20", tags: ["#notes","#biology"], pinned: true, aiSummary: null },
-  { id: "n2", title: "Algebra HW – Quadratic Equations", content: "Solve the following:\n1. x² + 5x + 6 = 0\n2. 2x² - 7x + 3 = 0\n3. x² - 9 = 0\n\nMethod: Use factorisation or the quadratic formula:\nx = (-b ± √(b²-4ac)) / 2a\n\nDue: Monday", userId: "t1", userName: "Mr. Arjun Menon", batch: "Grade 8-A", subject: "Math", date: "2026-06-21", tags: ["#homework","#math"], pinned: false, aiSummary: null },
+  { id: "n1", title: "Chapter 5 – Photosynthesis", content: "Photosynthesis is the process by which green plants use sunlight to synthesize nutrients from carbon dioxide and water. The overall equation: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂
+
+Key points:
+- Chlorophyll absorbs light (mainly red and blue)
+- Light-dependent reactions occur in thylakoid membranes
+- Calvin cycle occurs in the stroma
+- Products: glucose (stored energy) and oxygen (released)", userId: "t1", userName: "Mr. Arjun Menon", batch: "Grade 8-A", subject: "Biology", date: "2026-06-20", tags: ["#notes","#biology"], pinned: true, aiSummary: null },
+  { id: "n2", title: "Algebra HW – Quadratic Equations", content: "Solve the following:
+1. x² + 5x + 6 = 0
+2. 2x² - 7x + 3 = 0
+3. x² - 9 = 0
+
+Method: Use factorisation or the quadratic formula:
+x = (-b ± √(b²-4ac)) / 2a
+
+Due: Monday", userId: "t1", userName: "Mr. Arjun Menon", batch: "Grade 8-A", subject: "Math", date: "2026-06-21", tags: ["#homework","#math"], pinned: false, aiSummary: null },
 ];
 
 const SEED_EVENTS = [
@@ -599,7 +614,10 @@ function Notes({ user, notes, setNotes }) {
 
   const getAISummary = async (note) => {
     setAiLoading(true);
-    const summary = await callAI(`You are a helpful study assistant for school students. Summarize the following study notes in 3-5 key bullet points, highlight important concepts, and suggest 2 review questions.\n\nNotes:\n${note.content}`);
+    const summary = await callAI(`You are a helpful study assistant for school students. Summarize the following study notes in 3-5 key bullet points, highlight important concepts, and suggest 2 review questions.
+
+Notes:
+${note.content}`);
     setNotes(prev => prev.map(n => n.id === note.id ? { ...n, aiSummary: summary } : n));
     setViewNote(prev => prev ? { ...prev, aiSummary: summary } : null);
     setAiLoading(false);
@@ -940,8 +958,14 @@ function AIAssistant({ user, notes }) {
     setInput("");
     setMessages(prev => [...prev, { role: "user", text }]);
     setLoading(true);
-    const notesContext = myNotes.map(n => `[${n.subject}] ${n.title}: ${n.content.slice(0, 200)}`).join("\n");
-    const prompt = `You are a friendly, encouraging AI study assistant for school students. Keep responses concise and age-appropriate.\n\nAvailable study notes:\n${notesContext}\n\nStudent question: ${text}`;
+    const notesContext = myNotes.map(n => `[${n.subject}] ${n.title}: ${n.content.slice(0, 200)}`).join("
+");
+    const prompt = `You are a friendly, encouraging AI study assistant for school students. Keep responses concise and age-appropriate.
+
+Available study notes:
+${notesContext}
+
+Student question: ${text}`;
     const reply = await callAI(prompt);
     setMessages(prev => [...prev, { role: "assistant", text: reply }]);
     setLoading(false);
@@ -1220,7 +1244,7 @@ function AdminPanel({ users, setUsers, batches, setBatches }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN APP
 // ═══════════════════════════════════════════════════════════════════════════════
-export default function App() {
+function App() {
   const [users, setUsers] = useState(SEED_USERS);
   const [batches, setBatches] = useState(SEED_BATCHES);
   const [messages, setMessages] = useState(SEED_MESSAGES);
