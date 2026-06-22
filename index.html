@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyHive 🐝</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>* { box-sizing: border-box; } body { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const colors = {
+  primary: "#6C63FF",
+  primaryLight: "#EEF0FF",
+  primaryDark: "#4A42D4",
+  teal: "#0D9488",
+  tealLight: "#CCFBF1",
+  coral: "#F97316",
+  coralLight: "#FFF7ED",
+  amber: "#F59E0B",
+  amberLight: "#FFFBEB",
+  green: "#10B981",
+  greenLight: "#D1FAE5",
+  red: "#EF4444",
+  redLight: "#FEE2E2",
+  pink: "#EC4899",
+  pinkLight: "#FCE7F3",
+  bg: "#F8F7FF",
+  surface: "#FFFFFF",
+  border: "#E5E4F8",
+  textPrimary: "#1E1B4B",
+  textSecondary: "#6B7280",
+  textMuted: "#9CA3AF",
+};
+
+const EMOJIS = ["👍","❤️","😂","😮","😢","🎉","🔥","✅"];
+
+// ─── Initial seed data ────────────────────────────────────────────────────────
+const SEED_USERS = [
+  { id: "admin1", username: "admin", password: "admin123", role: "admin", name: "Ms. Priya Sharma", batch: null, avatar: "PS", firstLogin: false },
+  { id: "t1", username: "teacher1", password: "teach123", role: "teacher", name: "Mr. Arjun Menon", batch: "Grade 8-A", avatar: "AM", firstLogin: false },
+  { id: "s1", username: "student1", password: "pass123", role: "student", name: "Rohan Verma", batch: "Grade 8-A", avatar: "RV", firstLogin: false },
+  { id: "s2", username: "student2", password: "pass123", role: "student", name: "Ananya Singh", batch: "Grade 8-A", avatar: "AS", firstLogin: false },
+  { id: "s3", username: "student3", password: "pass123", role: "student", name: "Kabir Nair", batch: "Grade 9-B", avatar: "KN", firstLogin: false },
+];
+
+const SEED_BATCHES = [
+  { id: "b1", name: "Grade 8-A", subject: "Science & Math", color: colors.primary },
+  { id: "b2", name: "Grade 9-B", subject: "All Subjects", color: colors.teal },
+  { id: "b3", name: "Grade 10-C", subject: "Board Prep", color: colors.coral },
+];
+
+const SEED_MESSAGES = [
+  { id: "m1", userId: "t1", userName: "Mr. Arjun Menon", avatar: "AM", text: "Good morning everyone! Chapter 5 notes are uploaded.", time: "09:00", batch: "Grade 8-A", pinned: true, reactions: { "👍": ["s1","s2"] }, tags: ["#announcement"] },
+  { id: "m2", userId: "s1", userName: "Rohan Verma", avatar: "RV", text: "Thank you sir! Got it.", time: "09:05", batch: "Grade 8-A", pinned: false, reactions: {}, tags: [] },
+  { id: "m3", userId: "s2", userName: "Ananya Singh", avatar: "AS", text: "Can someone share notes for Chapter 4 too?", time: "09:10", batch: "Grade 8-A", pinned: false, reactions: { "👍": ["s1"] }, tags: ["#notes"] },
+];
+
+const SEED_NOTES = [
+  { id: "n1", title: "Chapter 5 – Photosynthesis", content: "Photosynthesis is the process by which green plants use sunlight to synthesize nutrients from carbon dioxide and water. The overall equation: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂\n\nKey points:\n- Chlorophyll absorbs light (mainly red and blue)\n- Light-dependent reactions occur in thylakoid membranes\n- Calvin cycle occurs in the stroma\n- Products: glucose (stored energy) and oxygen (released)", userId: "t1", userName: "Mr. Arjun Menon", batch: "Grade 8-A", subject: "Biology", date: "2026-06-20", tags: ["#notes","#biology"], pinned: true, aiSummary: null },
+  { id: "n2", title: "Algebra HW – Quadratic Equations", content: "Solve the following:\n1. x² + 5x + 6 = 0\n2. 2x² - 7x + 3 = 0\n3. x² - 9 = 0\n\nMethod: Use factorisation or the quadratic formula:\nx = (-b ± √(b²-4ac)) / 2a\n\nDue: Monday", userId: "t1", userName: "Mr. Arjun Menon", batch: "Grade 8-A", subject: "Math", date: "2026-06-21", tags: ["#homework","#math"], pinned: false, aiSummary: null },
+];
+
+const SEED_EVENTS = [
+  { id: "e1", title: "Science Quiz – Ch 5", date: "2026-06-25", time: "10:00", batch: "Grade 8-A", type: "quiz", color: colors.primary },
+  { id: "e2", title: "Math Assignment Due", date: "2026-06-23", time: "23:59", batch: "Grade 8-A", type: "deadline", color: colors.red },
+  { id: "e3", title: "Parent-Teacher Meet", date: "2026-06-28", time: "14:00", batch: null, type: "event", color: colors.teal },
+  { id: "e4", title: "Board Prep Session", date: "2026-07-01", time: "09:00", batch: "Grade 10-C", type: "class", color: colors.coral },
+];
+
+const SEED_QUIZZES = [
+  {
+    id: "q1", title: "Chapter 5 – Photosynthesis Quiz", batch: "Grade 8-A", userId: "t1",
+    questions: [
+      { id: "qq1", q: "What is the primary pigment involved in photosynthesis?", options: ["Carotene","Chlorophyll","Xanthophyll","Anthocyanin"], answer: 1 },
+      { id: "qq2", q: "Where does the Calvin cycle take place?", options: ["Thylakoid","Cytoplasm","Stroma","Nucleus"], answer: 2 },
+      { id: "qq3", q: "What gas is released as a byproduct of photosynthesis?", options: ["CO₂","N₂","O₂","H₂"], answer: 2 },
+      { id: "qq4", q: "Which part of the light spectrum does chlorophyll absorb most?", options: ["Green","Red and Blue","Yellow","Ultraviolet"], answer: 1 },
+    ],
+    results: { s1: { score: 3, total: 4, time: 45 }, s2: { score: 4, total: 4, time: 38 } },
+    active: true,
+  },
+];
+
+// ─── Mobile detection hook ────────────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function Avatar({ initials, size = 36, color = colors.primary }) {
+  const bg = color + "22";
+  return (
+    <div style={{ width: size, height: size, borderRadius: "50%", background: bg, border: `2px solid ${color}33`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.35, fontWeight: 700, color, flexShrink: 0 }}>
+      {initials}
+    </div>
+  );
+}
+
+function Badge({ children, color = colors.primary }) {
+  return (
+    <span style={{ background: color + "18", color, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, border: `1px solid ${color}30` }}>
+      {children}
+    </span>
+  );
+}
+
+function Pill({ children, active, onClick, color = colors.primary }) {
+  return (
+    <button onClick={onClick} style={{ background: active ? color : "transparent", color: active ? "#fff" : colors.textSecondary, border: `1.5px solid ${active ? color : colors.border}`, borderRadius: 20, padding: "4px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "all .15s" }}>
+      {children}
+    </button>
+  );
+}
+
+function Card({ children, style = {} }) {
+  return (
+    <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 16, padding: "18px 20px", ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function Input({ label, ...props }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      {label && <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: colors.textPrimary, marginBottom: 5 }}>{label}</label>}
+      <input style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${colors.border}`, fontSize: 14, color: colors.textPrimary, background: colors.bg, outline: "none", boxSizing: "border-box" }} {...props} />
+    </div>
+  );
+}
+
+function Textarea({ label, ...props }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      {label && <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: colors.textPrimary, marginBottom: 5 }}>{label}</label>}
+      <textarea style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${colors.border}`, fontSize: 14, color: colors.textPrimary, background: colors.bg, outline: "none", boxSizing: "border-box", minHeight: 100, resize: "vertical", fontFamily: "inherit" }} {...props} />
+    </div>
+  );
+}
+
+function Select({ label, children, ...props }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      {label && <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: colors.textPrimary, marginBottom: 5 }}>{label}</label>}
+      <select style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${colors.border}`, fontSize: 14, color: colors.textPrimary, background: colors.bg, outline: "none", boxSizing: "border-box" }} {...props}>
+        {children}
+      </select>
+    </div>
+  );
+}
+
+function Btn({ children, onClick, variant = "primary", size = "md", style = {}, disabled }) {
+  const base = { cursor: disabled ? "not-allowed" : "pointer", border: "none", borderRadius: 10, fontWeight: 600, fontFamily: "inherit", transition: "all .15s", opacity: disabled ? 0.5 : 1 };
+  const sizes = { sm: { padding: "6px 14px", fontSize: 13 }, md: { padding: "10px 20px", fontSize: 14 }, lg: { padding: "13px 28px", fontSize: 15 } };
+  const variants = {
+    primary: { background: colors.primary, color: "#fff" },
+    secondary: { background: colors.primaryLight, color: colors.primary },
+    danger: { background: colors.redLight, color: colors.red },
+    ghost: { background: "transparent", color: colors.textSecondary, border: `1px solid ${colors.border}` },
+    teal: { background: colors.teal, color: "#fff" },
+  };
+  return <button disabled={disabled} onClick={onClick} style={{ ...base, ...sizes[size], ...variants[variant], ...style }}>{children}</button>;
+}
+
+function Modal({ title, onClose, children, width = 480 }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "#0006", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ background: colors.surface, borderRadius: 20, width: "100%", maxWidth: width, maxHeight: "90vh", overflow: "auto", boxShadow: "0 20px 60px #0003" }}>
+        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${colors.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 17, fontWeight: 700, color: colors.textPrimary }}>{title}</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 22, color: colors.textMuted, lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ padding: "20px 24px" }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function Toast({ message, type = "success" }) {
+  const c = type === "success" ? colors.green : type === "error" ? colors.red : colors.primary;
+  return (
+    <div style={{ position: "fixed", bottom: 24, right: 24, background: c, color: "#fff", padding: "12px 20px", borderRadius: 12, fontWeight: 600, fontSize: 14, zIndex: 9999, boxShadow: "0 4px 20px #0003" }}>
+      {message}
+    </div>
+  );
+}
+
+// ─── AI Assistant (uses Anthropic API) ───────────────────────────────────────
+async function callAI(prompt) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  const data = await res.json();
+  return data.content?.[0]?.text || "Could not get response.";
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOGIN SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
+function LoginScreen({ users, onLogin }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = () => {
+    setLoading(true);
+    setErr("");
+    setTimeout(() => {
+      const user = users.find(u => u.username === username && u.password === password);
+      if (user) onLogin(user);
+      else setErr("Invalid username or password.");
+      setLoading(false);
+    }, 400);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: `linear-gradient(135deg, ${colors.primaryLight} 0%, ${colors.tealLight} 100%)`, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ width: "100%", maxWidth: 400 }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ fontSize: 48, marginBottom: 8 }}>🐝</div>
+          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, color: colors.textPrimary }}>StudyHive</h1>
+          <p style={{ margin: "6px 0 0", color: colors.textSecondary, fontSize: 15 }}>Collaborative learning for school kids</p>
+        </div>
+        <Card style={{ padding: "28px 32px" }}>
+          <Input label="Username" value={username} onChange={e => setUsername(e.target.value)} placeholder="e.g. student1" onKeyDown={e => e.key === "Enter" && handleLogin()} />
+          <Input label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === "Enter" && handleLogin()} />
+          {err && <p style={{ color: colors.red, fontSize: 13, margin: "-6px 0 12px" }}>{err}</p>}
+          <Btn onClick={handleLogin} size="lg" style={{ width: "100%" }} disabled={loading}>{loading ? "Signing in…" : "Sign in"}</Btn>
+          <div style={{ marginTop: 20, padding: "14px", background: colors.bg, borderRadius: 10 }}>
+            <p style={{ margin: 0, fontSize: 12, color: colors.textMuted, fontWeight: 600, marginBottom: 6 }}>DEMO ACCOUNTS</p>
+            {[["admin","admin123","Admin"],["teacher1","teach123","Teacher"],["student1","pass123","Student"]].map(([u,p,r]) => (
+              <div key={u} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: colors.textSecondary, marginBottom: 2 }}>
+                <span style={{ fontFamily: "monospace" }}>{u} / {p}</span>
+                <Badge color={r==="Admin" ? colors.coral : r==="Teacher" ? colors.teal : colors.primary}>{r}</Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHANGE PASSWORD SCREEN (first login)
+// ═══════════════════════════════════════════════════════════════════════════════
+function ChangePasswordScreen({ user, onDone }) {
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [err, setErr] = useState("");
+  const submit = () => {
+    if (pw.length < 6) return setErr("Password must be at least 6 characters.");
+    if (pw !== pw2) return setErr("Passwords do not match.");
+    onDone(pw);
+  };
+  return (
+    <div style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Card style={{ maxWidth: 380, width: "100%", padding: "32px" }}>
+        <div style={{ fontSize: 36, textAlign: "center", marginBottom: 8 }}>🔑</div>
+        <h2 style={{ textAlign: "center", margin: "0 0 6px", color: colors.textPrimary }}>Set your password</h2>
+        <p style={{ textAlign: "center", color: colors.textSecondary, fontSize: 14, marginBottom: 24 }}>Welcome, {user.name}! Please set a new password to continue.</p>
+        <Input label="New password" type="password" value={pw} onChange={e => setPw(e.target.value)} />
+        <Input label="Confirm password" type="password" value={pw2} onChange={e => setPw2(e.target.value)} />
+        {err && <p style={{ color: colors.red, fontSize: 13 }}>{err}</p>}
+        <Btn onClick={submit} style={{ width: "100%" }}>Set password & continue</Btn>
+      </Card>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SIDEBAR NAV
+// ═══════════════════════════════════════════════════════════════════════════════
+function Sidebar({ user, active, onNav, onLogout }) {
+  const isMobile = useIsMobile();
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const baseItems = [
+    { id: "dashboard", icon: "🏠", label: "Dashboard" },
+    { id: "chat", icon: "💬", label: "Chat" },
+    { id: "notes", icon: "📚", label: "Notes & HW" },
+    { id: "quiz", icon: "🧠", label: "Quizzes" },
+    { id: "calendar", icon: "📅", label: "Calendar" },
+    { id: "ai", icon: "🤖", label: "AI" },
+    { id: "video", icon: "🎥", label: "Video" },
+  ];
+  const adminItems = [{ id: "admin", icon: "⚙️", label: "Admin" }];
+  const items = user.role === "admin" ? [...baseItems, ...adminItems] : baseItems;
+  const bottomItems = items.slice(0, 5);
+
+  // ── MOBILE: bottom tab bar + hamburger for extras ──
+  if (isMobile) {
+    return (
+      <>
+        {/* Top header bar */}
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 200, background: colors.surface, borderBottom: `1px solid ${colors.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", height: 52 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 22 }}>🐝</span>
+            <span style={{ fontSize: 17, fontWeight: 800, color: colors.textPrimary }}>StudyHive</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Avatar initials={user.avatar} size={28} />
+            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: colors.textSecondary }}>☰</button>
+          </div>
+        </div>
+
+        {/* Slide-down menu */}
+        {menuOpen && (
+          <div style={{ position: "fixed", top: 52, left: 0, right: 0, zIndex: 199, background: colors.surface, borderBottom: `1px solid ${colors.border}`, padding: "8px 12px 12px", boxShadow: "0 4px 20px #0002" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 8 }}>
+              {items.map(item => (
+                <button key={item.id} onClick={() => { onNav(item.id); setMenuOpen(false); }} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 10, border: "none", background: active === item.id ? colors.primaryLight : colors.bg, color: active === item.id ? colors.primary : colors.textSecondary, fontWeight: active === item.id ? 700 : 500, fontSize: 14, cursor: "pointer", textAlign: "left" }}>
+                  <span style={{ fontSize: 18 }}>{item.icon}</span> {item.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 13, color: colors.textMuted }}>{user.name} · {user.role}</span>
+              <Btn variant="ghost" size="sm" onClick={onLogout}>Sign out</Btn>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom tab bar */}
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 200, background: colors.surface, borderTop: `1px solid ${colors.border}`, display: "flex", alignItems: "center", justifyContent: "space-around", padding: "6px 0 8px", height: 58 }}>
+          {bottomItems.map(item => (
+            <button key={item.id} onClick={() => { onNav(item.id); setMenuOpen(false); }} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 8, minWidth: 48 }}>
+              <span style={{ fontSize: 20 }}>{item.icon}</span>
+              <span style={{ fontSize: 10, fontWeight: active === item.id ? 700 : 400, color: active === item.id ? colors.primary : colors.textMuted }}>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  // ── DESKTOP: original sidebar ──
+  return (
+    <div style={{ width: 220, background: colors.surface, borderRight: `1px solid ${colors.border}`, display: "flex", flexDirection: "column", flexShrink: 0, height: "100vh", position: "sticky", top: 0 }}>
+      <div style={{ padding: "20px 16px 12px", borderBottom: `1px solid ${colors.border}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 26 }}>🐝</span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: colors.textPrimary }}>StudyHive</span>
+        </div>
+      </div>
+      <div style={{ padding: "10px 8px", flex: 1, overflowY: "auto" }}>
+        {items.map(item => (
+          <button key={item.id} onClick={() => onNav(item.id)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, border: "none", background: active === item.id ? colors.primaryLight : "transparent", color: active === item.id ? colors.primary : colors.textSecondary, fontWeight: active === item.id ? 700 : 500, fontSize: 14, cursor: "pointer", marginBottom: 2, textAlign: "left" }}>
+            <span style={{ fontSize: 18 }}>{item.icon}</span> {item.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ padding: "12px 16px", borderTop: `1px solid ${colors.border}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <Avatar initials={user.avatar} size={32} />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: colors.textPrimary }}>{user.name}</div>
+            <div style={{ fontSize: 11, color: colors.textMuted }}>{user.batch || user.role}</div>
+          </div>
+        </div>
+        <Btn variant="ghost" size="sm" onClick={onLogout} style={{ width: "100%" }}>Sign out</Btn>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════════════════════
+function Dashboard({ user, users, notes, events, quizzes, messages, onNav }) {
+  const myNotes = notes.filter(n => !n.batch || n.batch === user.batch);
+  const myEvents = events.filter(e => !e.batch || e.batch === user.batch).slice(0, 3);
+  const myMessages = messages.filter(m => m.batch === user.batch).slice(-3).reverse();
+  const statCards = [
+    { label: "Classmates", value: users.filter(u => u.batch === user.batch && u.role === "student").length, icon: "👥", color: colors.primary },
+    { label: "Notes shared", value: myNotes.length, icon: "📝", color: colors.teal },
+    { label: "Upcoming events", value: myEvents.length, icon: "📅", color: colors.coral },
+    { label: "Active quizzes", value: quizzes.filter(q => q.active && q.batch === user.batch).length, icon: "🧠", color: colors.amber },
+  ];
+  return (
+    <div>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: colors.textPrimary }}>Good morning, {user.name.split(" ")[0]} 👋</h1>
+        <p style={{ margin: "4px 0 0", color: colors.textSecondary }}>{user.batch || "Administrator"} · {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}</p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 12, marginBottom: 24 }}>
+        {statCards.map(s => (
+          <Card key={s.label} style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 28, marginBottom: 4 }}>{s.icon}</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 12, color: colors.textMuted }}>{s.label}</div>
+          </Card>
+        ))}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>📝 Recent notes</h3>
+            <Btn variant="secondary" size="sm" onClick={() => onNav("notes")}>View all</Btn>
+          </div>
+          {myNotes.slice(0, 3).map(n => (
+            <div key={n.id} style={{ padding: "10px 0", borderBottom: `1px solid ${colors.border}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: colors.textPrimary }}>{n.title}</div>
+              <div style={{ fontSize: 12, color: colors.textMuted }}>{n.subject} · {n.date}</div>
+            </div>
+          ))}
+        </Card>
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>📅 Upcoming events</h3>
+            <Btn variant="secondary" size="sm" onClick={() => onNav("calendar")}>View all</Btn>
+          </div>
+          {myEvents.map(e => (
+            <div key={e.id} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: `1px solid ${colors.border}`, alignItems: "center" }}>
+              <div style={{ width: 4, height: 36, borderRadius: 4, background: e.color, flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: colors.textPrimary }}>{e.title}</div>
+                <div style={{ fontSize: 12, color: colors.textMuted }}>{e.date} · {e.time}</div>
+              </div>
+            </div>
+          ))}
+          {myEvents.length === 0 && <p style={{ color: colors.textMuted, fontSize: 13 }}>No upcoming events</p>}
+        </Card>
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>💬 Recent chat</h3>
+            <Btn variant="secondary" size="sm" onClick={() => onNav("chat")}>Open chat</Btn>
+          </div>
+          {myMessages.map(m => (
+            <div key={m.id} style={{ display: "flex", gap: 8, padding: "8px 0", borderBottom: `1px solid ${colors.border}` }}>
+              <Avatar initials={m.avatar} size={28} />
+              <div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: colors.textPrimary }}>{m.userName}: </span>
+                <span style={{ fontSize: 13, color: colors.textSecondary }}>{m.text}</span>
+              </div>
+            </div>
+          ))}
+        </Card>
+        <Card>
+          <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>🧠 Active quizzes</h3>
+          {quizzes.filter(q => q.active && (!q.batch || q.batch === user.batch)).map(q => (
+            <div key={q.id} style={{ padding: "10px 0", borderBottom: `1px solid ${colors.border}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: colors.textPrimary }}>{q.title}</div>
+              <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                <Badge color={colors.primary}>{q.questions.length} questions</Badge>
+                {q.results[user.id] && <Badge color={colors.green}>Done ✓</Badge>}
+              </div>
+            </div>
+          ))}
+          {quizzes.filter(q => q.active && (!q.batch || q.batch === user.batch)).length === 0 && <p style={{ color: colors.textMuted, fontSize: 13 }}>No active quizzes</p>}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════════════════════════════════════════════
+function Chat({ user, messages, setMessages }) {
+  const [text, setText] = useState("");
+  const [emojiTarget, setEmojiTarget] = useState(null);
+  const [tagInput, setTagInput] = useState("");
+  const endRef = useRef(null);
+  const myBatch = user.batch || "Grade 8-A";
+
+  const myMessages = messages.filter(m => m.batch === myBatch);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  const send = () => {
+    if (!text.trim()) return;
+    const tags = text.match(/#\w+/g) || [];
+    const newMsg = { id: "m" + Date.now(), userId: user.id, userName: user.name, avatar: user.avatar, text: text.trim(), time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }), batch: myBatch, pinned: false, reactions: {}, tags };
+    setMessages(prev => [...prev, newMsg]);
+    setText("");
+  };
+
+  const deleteMsg = (id) => setMessages(prev => prev.filter(m => m.id !== id));
+  const pinMsg = (id) => setMessages(prev => prev.map(m => m.id === id ? { ...m, pinned: !m.pinned } : m));
+  const reactMsg = (id, emoji) => {
+    setMessages(prev => prev.map(m => {
+      if (m.id !== id) return m;
+      const r = { ...m.reactions };
+      if (!r[emoji]) r[emoji] = [];
+      if (r[emoji].includes(user.id)) r[emoji] = r[emoji].filter(u => u !== user.id);
+      else r[emoji] = [...r[emoji], user.id];
+      return { ...m, reactions: r };
+    }));
+    setEmojiTarget(null);
+  };
+
+  const pinned = myMessages.filter(m => m.pinned);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 48px)" }}>
+      <div style={{ padding: "0 0 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textPrimary }}>💬 {myBatch} Chat</h2>
+          <p style={{ margin: "3px 0 0", fontSize: 13, color: colors.textMuted }}>Tip: use #hashtags to tag messages</p>
+        </div>
+      </div>
+      {pinned.length > 0 && (
+        <div style={{ background: colors.amberLight, border: `1px solid ${colors.amber}30`, borderRadius: 10, padding: "10px 14px", marginBottom: 12 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: colors.amber }}>📌 PINNED</span>
+          {pinned.map(m => <div key={m.id} style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>{m.userName}: {m.text}</div>)}
+        </div>
+      )}
+      <div style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
+        {myMessages.map(m => {
+          const isMe = m.userId === user.id;
+          return (
+            <div key={m.id} style={{ display: "flex", flexDirection: isMe ? "row-reverse" : "row", gap: 8, marginBottom: 14, alignItems: "flex-start" }}>
+              <Avatar initials={m.avatar} size={32} />
+              <div style={{ maxWidth: "70%" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: isMe ? "flex-end" : "flex-start", marginBottom: 3 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: colors.textSecondary }}>{m.userName}</span>
+                  <span style={{ fontSize: 11, color: colors.textMuted }}>{m.time}</span>
+                  {m.pinned && <span style={{ fontSize: 11 }}>📌</span>}
+                </div>
+                <div style={{ background: isMe ? colors.primary : colors.surface, color: isMe ? "#fff" : colors.textPrimary, padding: "10px 14px", borderRadius: isMe ? "16px 4px 16px 16px" : "4px 16px 16px 16px", fontSize: 14, border: isMe ? "none" : `1px solid ${colors.border}`, lineHeight: 1.5 }}>
+                  {m.text}
+                  {m.tags.length > 0 && <div style={{ marginTop: 4 }}>{m.tags.map(t => <span key={t} style={{ fontSize: 11, background: isMe ? "#ffffff30" : colors.primaryLight, color: isMe ? "#fff" : colors.primary, padding: "1px 6px", borderRadius: 6, marginRight: 4 }}>{t}</span>)}</div>}
+                </div>
+                {Object.entries(m.reactions).filter(([, v]) => v.length > 0).length > 0 && (
+                  <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
+                    {Object.entries(m.reactions).filter(([, v]) => v.length > 0).map(([emoji, users]) => (
+                      <button key={emoji} onClick={() => reactMsg(m.id, emoji)} style={{ background: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 12, padding: "2px 8px", fontSize: 13, cursor: "pointer" }}>
+                        {emoji} {users.length}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+                  <button onClick={() => setEmojiTarget(emojiTarget === m.id ? null : m.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: colors.textMuted }}>😊</button>
+                  <button onClick={() => pinMsg(m.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: colors.textMuted }}>📌</button>
+                  {isMe && <button onClick={() => deleteMsg(m.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: colors.red }}>🗑</button>}
+                </div>
+                {emojiTarget === m.id && (
+                  <div style={{ display: "flex", gap: 4, background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 12, padding: "6px 10px", marginTop: 4 }}>
+                    {EMOJIS.map(e => <button key={e} onClick={() => reactMsg(m.id, e)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>{e}</button>)}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        <div ref={endRef} />
+      </div>
+      <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 12, display: "flex", gap: 8 }}>
+        <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} placeholder="Message… (use #tags)" style={{ flex: 1, padding: "11px 16px", borderRadius: 12, border: `1.5px solid ${colors.border}`, fontSize: 14, background: colors.bg, outline: "none", fontFamily: "inherit" }} />
+        <Btn onClick={send}>Send ↑</Btn>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NOTES & HOMEWORK
+// ═══════════════════════════════════════════════════════════════════════════════
+function Notes({ user, notes, setNotes }) {
+  const [showModal, setShowModal] = useState(false);
+  const [viewNote, setViewNote] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [filter, setFilter] = useState("All");
+  const [form, setForm] = useState({ title: "", content: "", subject: "Biology", tags: "" });
+
+  const myNotes = notes.filter(n => !n.batch || n.batch === user.batch);
+  const subjects = ["All", ...new Set(myNotes.map(n => n.subject))];
+  const filtered = filter === "All" ? myNotes : myNotes.filter(n => n.subject === filter);
+
+  const addNote = () => {
+    const tags = form.tags.split(",").map(t => "#" + t.trim().replace(/^#/, "")).filter(Boolean);
+    setNotes(prev => [...prev, { id: "n" + Date.now(), ...form, tags, userId: user.id, userName: user.name, batch: user.batch || "Grade 8-A", date: new Date().toISOString().slice(0, 10), pinned: false, aiSummary: null }]);
+    setForm({ title: "", content: "", subject: "Biology", tags: "" });
+    setShowModal(false);
+  };
+
+  const togglePin = (id) => setNotes(prev => prev.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n));
+  const deleteNote = (id) => setNotes(prev => prev.filter(n => n.id !== id));
+
+  const getAISummary = async (note) => {
+    setAiLoading(true);
+    const summary = await callAI(`You are a helpful study assistant for school students. Summarize the following study notes in 3-5 key bullet points, highlight important concepts, and suggest 2 review questions.\n\nNotes:\n${note.content}`);
+    setNotes(prev => prev.map(n => n.id === note.id ? { ...n, aiSummary: summary } : n));
+    setViewNote(prev => prev ? { ...prev, aiSummary: summary } : null);
+    setAiLoading(false);
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textPrimary }}>📚 Notes & Homework</h2>
+        {(user.role === "teacher" || user.role === "admin") && <Btn onClick={() => setShowModal(true)}>+ Upload note</Btn>}
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+        {subjects.map(s => <Pill key={s} active={filter === s} onClick={() => setFilter(s)}>{s}</Pill>)}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+        {filtered.map(note => (
+          <Card key={note.id} style={{ cursor: "pointer", position: "relative" }} onClick={() => setViewNote(note)}>
+            {note.pinned && <span style={{ position: "absolute", top: 12, right: 12, fontSize: 14 }}>📌</span>}
+            <div style={{ display: "flex", gap: 8, marginBottom: 8, alignItems: "center" }}>
+              <Badge color={colors.primary}>{note.subject}</Badge>
+              {note.aiSummary && <Badge color={colors.teal}>AI ✓</Badge>}
+            </div>
+            <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>{note.title}</h3>
+            <p style={{ margin: "0 0 10px", fontSize: 13, color: colors.textSecondary, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{note.content}</p>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+              {note.tags.map(t => <span key={t} style={{ fontSize: 11, background: colors.primaryLight, color: colors.primary, padding: "2px 7px", borderRadius: 6 }}>{t}</span>)}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 11, color: colors.textMuted }}>{note.userName} · {note.date}</span>
+              <div style={{ display: "flex", gap: 4 }}>
+                <button onClick={e => { e.stopPropagation(); togglePin(note.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>📌</button>
+                {(user.id === note.userId || user.role === "admin") && <button onClick={e => { e.stopPropagation(); deleteNote(note.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: colors.red }}>🗑</button>}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {showModal && (
+        <Modal title="Upload note / homework" onClose={() => setShowModal(false)}>
+          <Input label="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="e.g. Chapter 5 – Photosynthesis" />
+          <Select label="Subject" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}>
+            {["Biology","Chemistry","Physics","Math","History","English","Geography"].map(s => <option key={s}>{s}</option>)}
+          </Select>
+          <Textarea label="Content" value={form.content} onChange={e => setForm({ ...form, content: e.target.value })} placeholder="Paste notes, homework, or any content here…" style={{ minHeight: 140 }} />
+          <Input label="Tags (comma-separated)" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder="notes, homework, biology" />
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <Btn variant="ghost" onClick={() => setShowModal(false)}>Cancel</Btn>
+            <Btn onClick={addNote} disabled={!form.title || !form.content}>Upload</Btn>
+          </div>
+        </Modal>
+      )}
+
+      {viewNote && (
+        <Modal title={viewNote.title} onClose={() => setViewNote(null)} width={600}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+            <Badge color={colors.primary}>{viewNote.subject}</Badge>
+            <Badge color={colors.textMuted}>{viewNote.date}</Badge>
+            {viewNote.tags.map(t => <Badge key={t} color={colors.purple}>{t}</Badge>)}
+          </div>
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: 14, color: colors.textPrimary, lineHeight: 1.7, background: colors.bg, padding: 14, borderRadius: 10, margin: "0 0 16px" }}>{viewNote.content}</pre>
+          {viewNote.aiSummary ? (
+            <div style={{ background: colors.tealLight, border: `1px solid ${colors.teal}30`, borderRadius: 12, padding: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: colors.teal, marginBottom: 8 }}>🤖 AI Summary</div>
+              <pre style={{ whiteSpace: "pre-wrap", fontSize: 13, color: colors.textPrimary, lineHeight: 1.6, margin: 0 }}>{viewNote.aiSummary}</pre>
+            </div>
+          ) : (
+            <Btn variant="teal" onClick={() => getAISummary(viewNote)} disabled={aiLoading} style={{ width: "100%" }}>
+              {aiLoading ? "Generating AI summary…" : "🤖 Get AI Summary & Review Questions"}
+            </Btn>
+          )}
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// QUIZ ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+function Quiz({ user, quizzes, setQuizzes }) {
+  const [active, setActive] = useState(null);
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newQuiz, setNewQuiz] = useState({ title: "", batch: user.batch || "Grade 8-A", questions: [{ q: "", options: ["", "", "", ""], answer: 0 }] });
+  const timerRef = useRef(null);
+
+  const myQuizzes = quizzes.filter(q => !q.batch || q.batch === user.batch);
+
+  const startQuiz = (q) => { setActive(q); setAnswers({}); setSubmitted(false); setTimer(0); timerRef.current = setInterval(() => setTimer(t => t + 1), 1000); };
+  const stopTimer = () => { clearInterval(timerRef.current); };
+
+  const submitQuiz = () => {
+    stopTimer();
+    const score = active.questions.reduce((acc, q) => acc + (answers[q.id] === q.answer ? 1 : 0), 0);
+    setQuizzes(prev => prev.map(q => q.id === active.id ? { ...q, results: { ...q.results, [user.id]: { score, total: active.questions.length, time: timer } } } : q));
+    setActive(prev => ({ ...prev, results: { ...prev.results, [user.id]: { score, total: active.questions.length, time: timer } } }));
+    setSubmitted(true);
+  };
+
+  const addQuiz = () => {
+    setQuizzes(prev => [...prev, { id: "q" + Date.now(), ...newQuiz, userId: user.id, results: {}, active: true }]);
+    setShowCreate(false);
+    setNewQuiz({ title: "", batch: user.batch || "Grade 8-A", questions: [{ q: "", options: ["", "", "", ""], answer: 0 }] });
+  };
+
+  if (active) {
+    const result = active.results[user.id];
+    return (
+      <div style={{ maxWidth: 600, margin: "0 auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textPrimary }}>{active.title}</h2>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: colors.coral }}>⏱ {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}</span>
+            <Btn variant="ghost" size="sm" onClick={() => { stopTimer(); setActive(null); }}>← Back</Btn>
+          </div>
+        </div>
+        {submitted ? (
+          <Card style={{ textAlign: "center", padding: 32 }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>{result.score === result.total ? "🏆" : result.score >= result.total / 2 ? "⭐" : "📚"}</div>
+            <h2 style={{ margin: "0 0 6px", color: colors.textPrimary }}>Score: {result.score}/{result.total}</h2>
+            <p style={{ color: colors.textSecondary }}>Completed in {result.time}s</p>
+            <div style={{ margin: "20px 0" }}>
+              {active.questions.map((q, i) => (
+                <div key={q.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 0", borderBottom: `1px solid ${colors.border}`, textAlign: "left" }}>
+                  <span style={{ fontSize: 18 }}>{answers[q.id] === q.answer ? "✅" : "❌"}</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: colors.textPrimary }}>{q.q}</div>
+                    <div style={{ fontSize: 12, color: colors.green }}>Correct: {q.options[q.answer]}</div>
+                    {answers[q.id] !== q.answer && <div style={{ fontSize: 12, color: colors.red }}>Your answer: {q.options[answers[q.id]] || "Not answered"}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 16 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: colors.textPrimary, marginBottom: 12 }}>🏅 Leaderboard</h3>
+              {Object.entries(active.results).sort(([, a], [, b]) => b.score - a.score || a.time - b.time).map(([uid, r], i) => (
+                <div key={uid} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: `1px solid ${colors.border}`, fontSize: 14 }}>
+                  <span>{i + 1}. Student {uid.replace("s", "")}</span>
+                  <span style={{ fontWeight: 700 }}>{r.score}/{r.total} · {r.time}s</span>
+                </div>
+              ))}
+            </div>
+            <Btn onClick={() => setActive(null)} style={{ marginTop: 20 }}>Back to quizzes</Btn>
+          </Card>
+        ) : (
+          <>
+            {active.questions.map((q, qi) => (
+              <Card key={q.id} style={{ marginBottom: 14 }}>
+                <p style={{ fontWeight: 700, color: colors.textPrimary, marginBottom: 14, fontSize: 15 }}>Q{qi + 1}. {q.q}</p>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {q.options.map((opt, oi) => (
+                    <button key={oi} onClick={() => setAnswers(a => ({ ...a, [q.id]: oi }))} style={{ padding: "10px 14px", borderRadius: 10, border: `2px solid ${answers[q.id] === oi ? colors.primary : colors.border}`, background: answers[q.id] === oi ? colors.primaryLight : colors.surface, color: answers[q.id] === oi ? colors.primary : colors.textPrimary, fontWeight: answers[q.id] === oi ? 700 : 400, cursor: "pointer", textAlign: "left", fontSize: 14, fontFamily: "inherit" }}>
+                      {["A","B","C","D"][oi]}. {opt}
+                    </button>
+                  ))}
+                </div>
+              </Card>
+            ))}
+            <Btn onClick={submitQuiz} style={{ width: "100%" }} disabled={Object.keys(answers).length < active.questions.length}>
+              Submit answers ({Object.keys(answers).length}/{active.questions.length} answered)
+            </Btn>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textPrimary }}>🧠 Quizzes & Assignments</h2>
+        {(user.role === "teacher" || user.role === "admin") && <Btn onClick={() => setShowCreate(true)}>+ Create quiz</Btn>}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+        {myQuizzes.map(q => {
+          const done = !!q.results[user.id];
+          const myResult = q.results[user.id];
+          const topScore = Object.values(q.results).sort((a, b) => b.score - a.score)[0];
+          return (
+            <Card key={q.id}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <Badge color={colors.primary}>{q.batch}</Badge>
+                {done ? <Badge color={colors.green}>Completed ✓</Badge> : <Badge color={colors.amber}>Pending</Badge>}
+              </div>
+              <h3 style={{ margin: "0 0 8px", fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>{q.title}</h3>
+              <p style={{ margin: "0 0 12px", fontSize: 13, color: colors.textMuted }}>{q.questions.length} questions</p>
+              {done && <p style={{ fontSize: 13, color: colors.green, margin: "0 0 12px" }}>Your score: {myResult.score}/{myResult.total} in {myResult.time}s</p>}
+              {topScore && <p style={{ fontSize: 12, color: colors.textMuted, margin: "0 0 12px" }}>🏆 Best: {topScore.score}/{topScore.total}</p>}
+              <Btn onClick={() => startQuiz(q)} variant={done ? "secondary" : "primary"} style={{ width: "100%" }}>
+                {done ? "Retry quiz" : "Start quiz"}
+              </Btn>
+            </Card>
+          );
+        })}
+      </div>
+
+      {showCreate && (
+        <Modal title="Create new quiz" onClose={() => setShowCreate(false)} width={560}>
+          <Input label="Quiz title" value={newQuiz.title} onChange={e => setNewQuiz({ ...newQuiz, title: e.target.value })} placeholder="e.g. Chapter 5 Photosynthesis Quiz" />
+          {newQuiz.questions.map((q, qi) => (
+            <div key={qi} style={{ background: colors.bg, borderRadius: 10, padding: 14, marginBottom: 10 }}>
+              <Input label={`Question ${qi + 1}`} value={q.q} onChange={e => { const qs = [...newQuiz.questions]; qs[qi].q = e.target.value; setNewQuiz({ ...newQuiz, questions: qs }); }} placeholder="Enter question…" />
+              {q.options.map((opt, oi) => (
+                <div key={oi} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                  <input type="radio" name={`correct${qi}`} checked={q.answer === oi} onChange={() => { const qs = [...newQuiz.questions]; qs[qi].answer = oi; setNewQuiz({ ...newQuiz, questions: qs }); }} />
+                  <input value={opt} onChange={e => { const qs = [...newQuiz.questions]; qs[qi].options[oi] = e.target.value; setNewQuiz({ ...newQuiz, questions: qs }); }} placeholder={`Option ${["A","B","C","D"][oi]}`} style={{ flex: 1, padding: "7px 10px", borderRadius: 8, border: `1px solid ${colors.border}`, fontSize: 13, fontFamily: "inherit" }} />
+                </div>
+              ))}
+              <p style={{ fontSize: 11, color: colors.textMuted, margin: "4px 0 0" }}>Select the radio button next to the correct answer</p>
+            </div>
+          ))}
+          <Btn variant="secondary" size="sm" onClick={() => setNewQuiz({ ...newQuiz, questions: [...newQuiz.questions, { q: "", options: ["","","",""], answer: 0 }] })}>+ Add question</Btn>
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 14 }}>
+            <Btn variant="ghost" onClick={() => setShowCreate(false)}>Cancel</Btn>
+            <Btn onClick={addQuiz} disabled={!newQuiz.title || newQuiz.questions.some(q => !q.q)}>Publish quiz</Btn>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════════════════════════════════════
+function Calendar({ user, events, setEvents }) {
+  const [current, setCurrent] = useState(new Date(2026, 5, 1));
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({ title: "", date: "", time: "09:00", type: "event", batch: user.batch || "" });
+
+  const year = current.getFullYear(), month = current.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthName = current.toLocaleString("default", { month: "long", year: "numeric" });
+
+  const addEvent = () => {
+    const typeColors = { quiz: colors.primary, deadline: colors.red, event: colors.teal, class: colors.coral };
+    setEvents(prev => [...prev, { id: "e" + Date.now(), ...form, color: typeColors[form.type] }]);
+    setShowAdd(false);
+    setForm({ title: "", date: "", time: "09:00", type: "event", batch: user.batch || "" });
+  };
+
+  const myEvents = events.filter(e => !e.batch || e.batch === user.batch);
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textPrimary }}>📅 Calendar</h2>
+        {(user.role === "teacher" || user.role === "admin") && <Btn onClick={() => setShowAdd(true)}>+ Add event</Btn>}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <button onClick={() => setCurrent(new Date(year, month - 1, 1))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: colors.textSecondary }}>‹</button>
+            <span style={{ fontWeight: 700, fontSize: 16, color: colors.textPrimary }}>{monthName}</span>
+            <button onClick={() => setCurrent(new Date(year, month + 1, 1))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: colors.textSecondary }}>›</button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 8 }}>
+            {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => <div key={d} style={{ textAlign: "center", fontSize: 12, fontWeight: 600, color: colors.textMuted, padding: "4px 0" }}>{d}</div>)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
+            {Array(firstDay).fill(null).map((_, i) => <div key={"e" + i} />)}
+            {Array(daysInMonth).fill(null).map((_, i) => {
+              const day = i + 1;
+              const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+              const dayEvents = myEvents.filter(e => e.date === dateStr);
+              const isToday = dateStr === "2026-06-22";
+              return (
+                <div key={day} style={{ minHeight: 48, padding: "4px", borderRadius: 8, background: isToday ? colors.primaryLight : "transparent", border: isToday ? `2px solid ${colors.primary}` : "1px solid transparent" }}>
+                  <div style={{ fontSize: 13, fontWeight: isToday ? 700 : 400, color: isToday ? colors.primary : colors.textPrimary, marginBottom: 2, textAlign: "center" }}>{day}</div>
+                  {dayEvents.map(e => <div key={e.id} title={e.title} style={{ fontSize: 10, background: e.color, color: "#fff", borderRadius: 4, padding: "1px 4px", marginBottom: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{e.title}</div>)}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+        <div>
+          <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>Upcoming events</h3>
+          {myEvents.sort((a, b) => a.date.localeCompare(b.date)).map(e => (
+            <Card key={e.id} style={{ marginBottom: 10, padding: "12px 14px" }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{ width: 4, height: 40, borderRadius: 4, background: e.color, flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: colors.textPrimary }}>{e.title}</div>
+                  <div style={{ fontSize: 12, color: colors.textMuted }}>{e.date} · {e.time}</div>
+                  {e.batch && <Badge color={e.color}>{e.batch}</Badge>}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {showAdd && (
+        <Modal title="Add event" onClose={() => setShowAdd(false)}>
+          <Input label="Event title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <Input label="Date" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+            <Input label="Time" type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
+          </div>
+          <Select label="Type" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
+            <option value="event">Event</option>
+            <option value="quiz">Quiz</option>
+            <option value="deadline">Deadline</option>
+            <option value="class">Class</option>
+          </Select>
+          <Input label="Batch (optional)" value={form.batch} onChange={e => setForm({ ...form, batch: e.target.value })} placeholder="Leave blank for all" />
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <Btn variant="ghost" onClick={() => setShowAdd(false)}>Cancel</Btn>
+            <Btn onClick={addEvent} disabled={!form.title || !form.date}>Add event</Btn>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AI ASSISTANT
+// ═══════════════════════════════════════════════════════════════════════════════
+function AIAssistant({ user, notes }) {
+  const [messages, setMessages] = useState([
+    { role: "assistant", text: "Hi! I'm your AI study assistant 🤖 I can summarize notes, explain concepts, generate practice questions, or help you understand any topic. What would you like to explore today?" }
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const endRef = useRef(null);
+  const myNotes = notes.filter(n => !n.batch || n.batch === user.batch);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  const send = async (msgText) => {
+    const text = msgText || input;
+    if (!text.trim()) return;
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", text }]);
+    setLoading(true);
+    const notesContext = myNotes.map(n => `[${n.subject}] ${n.title}: ${n.content.slice(0, 200)}`).join("\n");
+    const prompt = `You are a friendly, encouraging AI study assistant for school students. Keep responses concise and age-appropriate.\n\nAvailable study notes:\n${notesContext}\n\nStudent question: ${text}`;
+    const reply = await callAI(prompt);
+    setMessages(prev => [...prev, { role: "assistant", text: reply }]);
+    setLoading(false);
+  };
+
+  const quickActions = [
+    "Summarize all my notes",
+    "Generate 5 practice questions from my notes",
+    "Explain photosynthesis simply",
+    "What topics should I focus on for the quiz?",
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 48px)" }}>
+      <div style={{ marginBottom: 16 }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textPrimary }}>🤖 AI Study Assistant</h2>
+        <p style={{ margin: "3px 0 0", fontSize: 13, color: colors.textMuted }}>Powered by Claude · Reads your class notes</p>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+        {quickActions.map(a => (
+          <button key={a} onClick={() => send(a)} style={{ background: colors.primaryLight, color: colors.primary, border: `1px solid ${colors.primary}30`, borderRadius: 20, padding: "5px 12px", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+            {a}
+          </button>
+        ))}
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", paddingRight: 4 }}>
+        {messages.map((m, i) => (
+          <div key={i} style={{ display: "flex", gap: 10, marginBottom: 16, justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+            {m.role === "assistant" && <div style={{ width: 32, height: 32, borderRadius: "50%", background: colors.tealLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>🤖</div>}
+            <div style={{ maxWidth: "75%", background: m.role === "user" ? colors.primary : colors.surface, color: m.role === "user" ? "#fff" : colors.textPrimary, padding: "12px 16px", borderRadius: m.role === "user" ? "16px 4px 16px 16px" : "4px 16px 16px 16px", fontSize: 14, border: m.role === "user" ? "none" : `1px solid ${colors.border}`, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+              {m.text}
+            </div>
+            {m.role === "user" && <Avatar initials={user.avatar} size={32} />}
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: colors.tealLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🤖</div>
+            <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, padding: "12px 16px", borderRadius: "4px 16px 16px 16px", fontSize: 14, color: colors.textMuted }}>Thinking…</div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+      <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 12, display: "flex", gap: 8 }}>
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !loading && send()} placeholder="Ask me anything about your notes…" style={{ flex: 1, padding: "11px 16px", borderRadius: 12, border: `1.5px solid ${colors.border}`, fontSize: 14, background: colors.bg, outline: "none", fontFamily: "inherit" }} />
+        <Btn onClick={() => send()} disabled={loading || !input.trim()}>Ask ↑</Btn>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VIDEO CALL
+// ═══════════════════════════════════════════════════════════════════════════════
+function VideoCall({ user }) {
+  const [room, setRoom] = useState("");
+  const [inCall, setInCall] = useState(false);
+  const [roomInput, setRoomInput] = useState("");
+  const batches = SEED_BATCHES;
+
+  const joinRoom = (r) => { setRoom(r); setInCall(true); };
+
+  if (inCall) {
+    const jitsiRoom = "StudyHive-" + room.replace(/\s+/g, "-");
+    return (
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textPrimary }}>🎥 {room}</h2>
+          <Btn variant="danger" onClick={() => setInCall(false)}>Leave call</Btn>
+        </div>
+        <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${colors.border}` }}>
+          <iframe
+            title="Video call"
+            src={`https://meet.jit.si/${jitsiRoom}#userInfo.displayName="${encodeURIComponent(user.name)}"`}
+            style={{ width: "100%", height: "60vh", border: "none" }}
+            allow="camera; microphone; fullscreen; display-capture"
+          />
+        </div>
+        <p style={{ fontSize: 12, color: colors.textMuted, marginTop: 8 }}>Powered by Jitsi Meet · Free & open-source · No account needed</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textPrimary }}>🎥 Video & Voice Calls</h2>
+        <p style={{ margin: "4px 0 0", color: colors.textMuted, fontSize: 13 }}>Powered by Jitsi Meet — free, no account needed</p>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+        {batches.map(b => (
+          <Card key={b.id} style={{ cursor: "pointer", borderColor: b.color + "40" }} onClick={() => joinRoom(b.name)}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <span style={{ fontSize: 22 }}>🎥</span>
+              <Badge color={b.color}>{b.subject}</Badge>
+            </div>
+            <h3 style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>{b.name}</h3>
+            <p style={{ margin: "0 0 12px", fontSize: 13, color: colors.textMuted }}>Class video room</p>
+            <Btn variant="primary" style={{ width: "100%", background: b.color }}>Join {b.name} room</Btn>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>🔗 Join a custom room</h3>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input value={roomInput} onChange={e => setRoomInput(e.target.value)} placeholder="Enter room name or code…" onKeyDown={e => e.key === "Enter" && roomInput && joinRoom(roomInput)} style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${colors.border}`, fontSize: 14, background: colors.bg, outline: "none", fontFamily: "inherit" }} />
+          <Btn onClick={() => joinRoom(roomInput)} disabled={!roomInput}>Join room</Btn>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ADMIN PANEL
+// ═══════════════════════════════════════════════════════════════════════════════
+function AdminPanel({ users, setUsers, batches, setBatches }) {
+  const [tab, setTab] = useState("users");
+  const [showUser, setShowUser] = useState(false);
+  const [showBatch, setShowBatch] = useState(false);
+  const [userForm, setUserForm] = useState({ name: "", username: "", password: "", role: "student", batch: "" });
+  const [batchForm, setBatchForm] = useState({ name: "", subject: "" });
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 2000); };
+
+  const addUser = () => {
+    if (users.find(u => u.username === userForm.username)) return showToast("Username taken", "error");
+    const initials = userForm.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+    setUsers(prev => [...prev, { id: "u" + Date.now(), ...userForm, avatar: initials, firstLogin: true }]);
+    setShowUser(false);
+    setUserForm({ name: "", username: "", password: "", role: "student", batch: "" });
+    showToast("User created! They must change password on first login.");
+  };
+
+  const deleteUser = (id) => { setUsers(prev => prev.filter(u => u.id !== id)); showToast("User removed"); };
+  const toggleUser = (id) => { setUsers(prev => prev.map(u => u.id === id ? { ...u, active: !u.active } : u)); };
+
+  const addBatch = () => {
+    const bColors = [colors.primary, colors.teal, colors.coral, colors.amber, colors.pink];
+    setBatches(prev => [...prev, { id: "b" + Date.now(), ...batchForm, color: bColors[prev.length % bColors.length] }]);
+    setShowBatch(false);
+    setBatchForm({ name: "", subject: "" });
+    showToast("Batch created!");
+  };
+
+  return (
+    <div>
+      {toast && <Toast message={toast.msg} type={toast.type} />}
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: colors.textPrimary }}>⚙️ Admin Panel</h2>
+        <p style={{ margin: "3px 0 0", color: colors.textMuted, fontSize: 13 }}>Manage users, batches, and access rights</p>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+        {["users","batches","stats"].map(t => <Pill key={t} active={tab === t} onClick={() => setTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</Pill>)}
+      </div>
+
+      {tab === "users" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+            <span style={{ fontSize: 14, color: colors.textSecondary }}>{users.length} users total</span>
+            <Btn onClick={() => setShowUser(true)}>+ New user</Btn>
+          </div>
+          <Card style={{ padding: 0, overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: colors.bg }}>
+                  {["User","Username","Role","Batch","Actions"].map(h => (
+                    <th key={h} style={{ padding: "10px 16px", fontSize: 12, fontWeight: 700, color: colors.textMuted, textAlign: "left", borderBottom: `1px solid ${colors.border}` }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                    <td style={{ padding: "10px 16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Avatar initials={u.avatar} size={28} />
+                        <span style={{ fontSize: 14, fontWeight: 600, color: colors.textPrimary }}>{u.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: "10px 16px", fontSize: 13, fontFamily: "monospace", color: colors.textSecondary }}>{u.username}</td>
+                    <td style={{ padding: "10px 16px" }}><Badge color={u.role === "admin" ? colors.coral : u.role === "teacher" ? colors.teal : colors.primary}>{u.role}</Badge></td>
+                    <td style={{ padding: "10px 16px", fontSize: 13, color: colors.textSecondary }}>{u.batch || "—"}</td>
+                    <td style={{ padding: "10px 16px" }}>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <Btn variant="ghost" size="sm" onClick={() => toggleUser(u.id)}>{u.active === false ? "Enable" : "Disable"}</Btn>
+                        {u.role !== "admin" && <Btn variant="danger" size="sm" onClick={() => deleteUser(u.id)}>Remove</Btn>}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        </div>
+      )}
+
+      {tab === "batches" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+            <span style={{ fontSize: 14, color: colors.textSecondary }}>{batches.length} batches</span>
+            <Btn onClick={() => setShowBatch(true)}>+ New batch</Btn>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 14 }}>
+            {batches.map(b => (
+              <Card key={b.id} style={{ borderLeft: `4px solid ${b.color}` }}>
+                <h3 style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: colors.textPrimary }}>{b.name}</h3>
+                <p style={{ margin: "0 0 10px", fontSize: 13, color: colors.textMuted }}>{b.subject}</p>
+                <div style={{ fontSize: 13, color: colors.textSecondary }}>
+                  {users.filter(u => u.batch === b.name).length} students
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === "stats" && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+          {[
+            { label: "Total users", value: users.length, icon: "👥", color: colors.primary },
+            { label: "Students", value: users.filter(u => u.role === "student").length, icon: "🎒", color: colors.teal },
+            { label: "Teachers", value: users.filter(u => u.role === "teacher").length, icon: "🧑‍🏫", color: colors.coral },
+            { label: "Active batches", value: batches.length, icon: "📚", color: colors.amber },
+            { label: "Total notes", value: SEED_NOTES.length, icon: "📝", color: colors.green },
+            { label: "Platform", value: "StudyHive v1.0", icon: "🐝", color: colors.pink },
+          ].map(s => (
+            <Card key={s.label} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 32, marginBottom: 6 }}>{s.icon}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: colors.textMuted }}>{s.label}</div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {showUser && (
+        <Modal title="Create new user" onClose={() => setShowUser(false)}>
+          <Input label="Full name" value={userForm.name} onChange={e => setUserForm({ ...userForm, name: e.target.value })} placeholder="e.g. Riya Patel" />
+          <Input label="Username" value={userForm.username} onChange={e => setUserForm({ ...userForm, username: e.target.value })} placeholder="e.g. riya.patel" />
+          <Input label="Temporary password" type="text" value={userForm.password} onChange={e => setUserForm({ ...userForm, password: e.target.value })} placeholder="Share this with the user" />
+          <Select label="Role" value={userForm.role} onChange={e => setUserForm({ ...userForm, role: e.target.value })}>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </Select>
+          <Select label="Batch" value={userForm.batch} onChange={e => setUserForm({ ...userForm, batch: e.target.value })}>
+            <option value="">— No batch —</option>
+            {batches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+          </Select>
+          <p style={{ fontSize: 12, color: colors.textMuted, margin: "-4px 0 12px", background: colors.amberLight, padding: "8px 12px", borderRadius: 8 }}>
+            ⚠️ The user will be prompted to set a new password on first login.
+          </p>
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <Btn variant="ghost" onClick={() => setShowUser(false)}>Cancel</Btn>
+            <Btn onClick={addUser} disabled={!userForm.name || !userForm.username || !userForm.password}>Create user</Btn>
+          </div>
+        </Modal>
+      )}
+
+      {showBatch && (
+        <Modal title="Create new batch" onClose={() => setShowBatch(false)}>
+          <Input label="Batch name" value={batchForm.name} onChange={e => setBatchForm({ ...batchForm, name: e.target.value })} placeholder="e.g. Grade 7-A" />
+          <Input label="Subject focus" value={batchForm.subject} onChange={e => setBatchForm({ ...batchForm, subject: e.target.value })} placeholder="e.g. Science & Math" />
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <Btn variant="ghost" onClick={() => setShowBatch(false)}>Cancel</Btn>
+            <Btn onClick={addBatch} disabled={!batchForm.name}>Create batch</Btn>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════════════════════════════
+export default function App() {
+  const [users, setUsers] = useState(SEED_USERS);
+  const [batches, setBatches] = useState(SEED_BATCHES);
+  const [messages, setMessages] = useState(SEED_MESSAGES);
+  const [notes, setNotes] = useState(SEED_NOTES);
+  const [events, setEvents] = useState(SEED_EVENTS);
+  const [quizzes, setQuizzes] = useState(SEED_QUIZZES);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [page, setPage] = useState("dashboard");
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type) => { setToast({ msg, type }); setTimeout(() => setToast(null), 2500); };
+
+  const handleLogin = (user) => { setCurrentUser(user); setPage("dashboard"); };
+
+  const handlePasswordChange = (newPw) => {
+    setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, password: newPw, firstLogin: false } : u));
+    setCurrentUser(prev => ({ ...prev, password: newPw, firstLogin: false }));
+    showToast("Password updated!");
+  };
+
+  const handleLogout = () => { setCurrentUser(null); setPage("dashboard"); };
+
+  if (!currentUser) return <LoginScreen users={users} onLogin={handleLogin} />;
+  if (currentUser.firstLogin) return <ChangePasswordScreen user={currentUser} onDone={handlePasswordChange} />;
+
+  const pageProps = { user: currentUser, users, setUsers, batches, setBatches, messages, setMessages, notes, setNotes, events, setEvents, quizzes, setQuizzes, onNav: setPage };
+
+  const isMobile = useIsMobile();
+  return (
+    <div style={{ display: "flex", minHeight: "100vh", background: colors.bg, fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+      <Sidebar user={currentUser} active={page} onNav={setPage} onLogout={handleLogout} />
+      <main style={{ flex: 1, padding: isMobile ? "68px 14px 74px" : "28px 32px", overflowY: "auto", maxHeight: "100vh", width: "100%" }}>
+        {page === "dashboard" && <Dashboard {...pageProps} />}
+        {page === "chat" && <Chat {...pageProps} />}
+        {page === "notes" && <Notes {...pageProps} />}
+        {page === "quiz" && <Quiz {...pageProps} />}
+        {page === "calendar" && <Calendar {...pageProps} />}
+        {page === "ai" && <AIAssistant {...pageProps} />}
+        {page === "video" && <VideoCall {...pageProps} />}
+        {page === "admin" && currentUser.role === "admin" && <AdminPanel {...pageProps} />}
+      </main>
+      {toast && <Toast message={toast.msg} type={toast.type} />}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
+</body>
+</html>
